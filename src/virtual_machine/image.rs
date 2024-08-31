@@ -121,6 +121,19 @@ impl Image {
         self.entry_point = self.emit_address;
     }
 
+    pub fn set_entry_point(
+        &mut self, 
+        entry_point: Word
+    ) -> Result<(), ()> 
+    {
+        if entry_point >= self.image.len() {
+            Err(())
+        } else {
+            self.entry_point = entry_point;
+            Ok(())
+        }
+    }
+
     pub fn get_image(&self) -> &[Word] {
         &self.image
     }

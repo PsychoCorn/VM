@@ -64,7 +64,7 @@ impl OpCode {
 
     // pushes return address and jump by address in dx
     pub const CALL         : Word = 36;
-    // pops return address to dx and jump
+    // pops return address and jump
     pub const RET          : Word = 37;
     // ax - code of syscall
     // bx, cx, dx - args for syscall

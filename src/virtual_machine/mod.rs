@@ -1,4 +1,4 @@
-mod lexical_cast;
+pub mod lexical_cast;
 mod into_char;
 pub mod image;
 pub mod op_codes;
@@ -338,9 +338,8 @@ impl VirtualMachine {
                 }
 
                 OpCode::RET => {
-                    self.dx = self.memory[self.sp];
+                    self.ip = self.memory[self.sp];
                     self.sp += 1;
-                    self.ip = self.dx;
                     continue;
                 }
 
