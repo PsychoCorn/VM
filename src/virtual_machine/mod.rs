@@ -146,7 +146,7 @@ impl VirtualMachine {
                 }
                 
                 OpCode::DIV => {
-                    self.bx = self.ax.wrapping_rem(self.bx);
+                    self.dx = self.ax.wrapping_rem(self.bx);
                     self.ax = self.ax.wrapping_div(self.bx);
                 }
 

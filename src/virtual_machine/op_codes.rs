@@ -17,7 +17,7 @@ impl OpCode {
     // @ - operator
     // unary: ax = @ax
     // binary: ax = ax @ bx
-    // div: ax - quot, bx - rem
+    // div: ax - quot, dx - rem
     pub const INC          : Word =  3;
     pub const DEC          : Word =  4;
     pub const NEG          : Word =  5;
