@@ -74,7 +74,7 @@ impl Image {
         self.prepare_space(words_counter);
 
         self
-            .image[self.emit_address..]
+            .image[self.emit_address..self.emit_address+words_counter]
             .copy_from_slice(&str_in_words);
 
         self.emit_address += words_counter;
@@ -89,7 +89,7 @@ impl Image {
         let start_address = self.emit_address;
 
         self
-            .image[self.emit_address..]
+            .image[self.emit_address..self.emit_address+word_counter]
             .clone_from_slice(&other.image);
 
         self.emit_address += word_counter;
@@ -102,13 +102,15 @@ impl Image {
     }
 
     pub fn write_data(&mut self, address: Word, data: &[Word]) {
+        let words_counter = data.len();
+
         self.prepare_space_in_address(
             address, 
-            data.len()
+            words_counter
         );
 
         self 
-            .image[address..]
+            .image[address..address+words_counter]
             .clone_from_slice(data);
     }
 
