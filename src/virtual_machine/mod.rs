@@ -437,6 +437,10 @@ impl VirtualMachine {
                     self.ax = sw_val.lexical_cast().unwrap();
                 }
 
+                OpCode::DEREF => {
+                    self.ax = self.memory[self.ax];
+                }
+
                 opcode => panic!("Unknown opcode: {opcode}")
             }
 

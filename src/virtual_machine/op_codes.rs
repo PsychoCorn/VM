@@ -94,4 +94,7 @@ impl OpCode {
     pub const CRTOW        : Word = 57;
     pub const CRTOSW       : Word = 58;
 
+    // ax = *ax
+    pub const DEREF        : Word = 59;
+
 }
