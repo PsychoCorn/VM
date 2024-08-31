@@ -1,4 +1,5 @@
-use super::{Memory, Word};
+use super::{get_bytes::GetBytes, Memory, Word};
+use std::{fs::File, io::Write};
 
 #[derive(Debug)]
 pub struct Image {
@@ -140,6 +141,24 @@ impl Image {
 
     pub fn get_entry_point(&self) -> Word {
         self.entry_point
+    }
+
+    pub fn load_to_file(&self, path: &str) -> Result<(), ()> {
+        let mut file: File;
+        if let Ok(f) = File::open(path) {
+            file = f;
+            file.write(self.entry_point.get_bytes()).unwrap();
+            file.write(self.get_image().get_bytes()).unwrap();
+            return Ok(());
+        }
+
+        if let Ok(f) = File::create(path)  {
+            file = f;
+            file.write(self.entry_point.get_bytes()).unwrap();
+            file.write(self.get_image().get_bytes()).unwrap();
+            return Ok(());  
+        }
+        Err(())
     }
 
     fn prepare_space(&mut self, words_count: Word) {
