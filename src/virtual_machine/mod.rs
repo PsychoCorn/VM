@@ -468,6 +468,8 @@ impl VirtualMachine {
                 io::stdout().flush().unwrap();
             }
 
+            // get line from console
+            // dx - address of buffer
             1 => {
                 let mut buf = String::new();
                 io::stdin().read_line(&mut buf).unwrap();
@@ -477,6 +479,8 @@ impl VirtualMachine {
                 }
             }
 
+            // end of program
+            // dx - return value
             2 => {
                 self.ax = self.dx;
                 self.ip = self.max_address;

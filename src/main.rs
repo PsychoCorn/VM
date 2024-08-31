@@ -6,8 +6,10 @@ fn main() {
     let i = create_image();
     let mut machine = VirtualMachine::new();
     machine.load_image(&i).unwrap();
-    machine.execute().unwrap();
+    let r = machine.execute().unwrap();
     println!("\n--------------------------");
+    println!("Program execution ended with status {r}");
+    println!("--------------------------");
     println!("{machine:?}");
 }
 
