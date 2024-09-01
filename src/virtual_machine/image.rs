@@ -1,5 +1,5 @@
-use super::{get_bytes::GetBytes, Memory, Word};
-use std::{fs::File, io::Write};
+use super::{byte_casts::{from_bytes, GetBytes}, Memory, Word};
+use std::{fs::{File, OpenOptions}, io::{Read, Write}};
 
 #[derive(Debug)]
 pub struct Image {
@@ -143,9 +143,11 @@ impl Image {
         self.entry_point
     }
 
-    pub fn load_to_file(&self, path: &str) -> Result<(), ()> {
+    pub fn save_to_file(&self, path: &str) -> Result<(), &str> {
         let mut file: File;
-        if let Ok(f) = File::open(path) {
+        if let Ok(f) = 
+            OpenOptions::new().write(true).open(path) 
+        {
             file = f;
             file.write(self.entry_point.get_bytes()).unwrap();
             file.write(self.get_image().get_bytes()).unwrap();
@@ -158,7 +160,26 @@ impl Image {
             file.write(self.get_image().get_bytes()).unwrap();
             return Ok(());  
         }
-        Err(())
+        Err("Opening and creating file were failed")
+    }
+
+    pub fn load_from_file(&mut self, path: &str) -> Result<(), &str> {
+        let mut file: File;
+        if let Ok(f) = File::open(path) {
+            file = f;
+            let mut buf: Vec<u8> = Vec::new();
+            file.read_to_end(&mut buf).unwrap();
+            if let Some(words) = from_bytes::<Word>(&buf) {
+                self.entry_point = words[0];
+                self.write_data(0, &words[1..]);
+                self.emit_address = words.len() - 1;
+                Ok(())
+            } else {
+                Err("Failed to read file")
+            }
+        } else {
+            Err("Opening file was failed")
+        }
     }
 
     fn prepare_space(&mut self, words_count: Word) {

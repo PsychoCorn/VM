@@ -31,3 +31,22 @@ impl<T: Copy> GetBytes for &[T] {
         }
     }
 }
+
+
+pub fn from_bytes<T>(bytes: &[u8]) -> Option<&[T]> {
+    let bytes_counter = bytes.len();
+    if bytes_counter % size_of::<T>() != 0 {
+        None
+    } else {
+        let data = 
+            bytes.as_ptr() as *const T;
+        Some (
+            unsafe {
+                &* slice_from_raw_parts(
+                    data, 
+                    bytes_counter / size_of::<T>()
+                )
+            }
+        )
+    }
+}

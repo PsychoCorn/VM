@@ -1,6 +1,6 @@
 mod lexical_cast;
 mod into_char;
-mod get_bytes;
+mod byte_casts;
 pub mod image;
 pub mod op_codes;
 
