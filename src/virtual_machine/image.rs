@@ -303,6 +303,7 @@ impl Image {
                 OpCode::SUB => result.push_str("sub"),
                 OpCode::SYSCALL => result.push_str("syscall"),
                 OpCode::XOR => result.push_str("xor"),
+                0 => result.push('0'),
                 _ => panic!("Unknown opcode")
             }
             result.push('\n');
