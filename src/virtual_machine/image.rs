@@ -1,5 +1,6 @@
-use super::{byte_casts::{from_bytes, GetBytes}, Memory, Word};
+use super::{byte_casts::{from_bytes, GetBytes}, Memory, OpCode, Word};
 use std::{fs::{File, OpenOptions}, io::{Read, Write}};
+use core::slice::Iter;
 
 #[derive(Debug)]
 pub struct Image {
@@ -207,7 +208,123 @@ impl Image {
     }
 
     #[allow(dead_code, unused_variables)]
-    fn print_mnemonics(&self, address: Word) -> Word {
-        todo!()
+    pub fn get_mnemonics(&self) -> String {
+        self.get_mnemonics_from(self.entry_point)
     }
+
+    #[allow(dead_code, unused_variables)]
+    pub fn get_mnemonics_from(&self, address: Word) -> String {
+        let mut result = String::new();
+        let mut idx = address;
+
+        while idx < self.image.len() {
+            result.push_str(format!("0x{idx:0>16x}: ").as_str());
+            match self.image[idx] {
+                OpCode::ADD => result.push_str("add"),
+                OpCode::AND => result.push_str("and"),
+                OpCode::CALL => result.push_str("call"),
+                OpCode::CRTOSW => result.push_str("crtosw"),
+                OpCode::CRTOW => result.push_str("crtow"),
+                OpCode::CSWTOR => result.push_str("cswtor"),
+                OpCode::CWTOR => result.push_str("cwtor"),
+                OpCode::DEC => result.push_str("dec"),
+                OpCode::DEREF => result.push_str("deref"),
+                OpCode::DIV => result.push_str("div"),
+                OpCode::FADD => result.push_str("fadd"),
+                OpCode::FDIV => result.push_str("fdiv"),
+                OpCode::FJG => result.push_str("fjg"),
+                OpCode::FJGE => result.push_str("fjge"),
+                OpCode::FJL => result.push_str("fjl"),
+                OpCode::FJLE => result.push_str("fjle"),
+                OpCode::FMUL => result.push_str("fmul"),
+                OpCode::FNEG => result.push_str("fneg"),
+                OpCode::FSUB => result.push_str("fsub"),
+                OpCode::INC => result.push_str("inc"),
+                OpCode::JA => result.push_str("ja"),
+                OpCode::JAE => result.push_str("jae"),
+                OpCode::JB => result.push_str("jb"),
+                OpCode::JBE => result.push_str("jbe"),
+                OpCode::JE => result.push_str("je"),
+                OpCode::JG => result.push_str("jg"),
+                OpCode::JGE => result.push_str("jge"),
+                OpCode::JL => result.push_str("jl"),
+                OpCode::JLE => result.push_str("jle"),
+                OpCode::JMP => result.push_str("jmp"),
+                OpCode::JNE => result.push_str("jne"),
+                OpCode::MOVE_AX_TO_BX => result.push_str("mov bx, ax"),
+                OpCode::MOVE_AX_TO_CX => result.push_str("mov cx, ax"),
+                OpCode::MOVE_AX_TO_DX => result.push_str("mov dx, ax"),
+                OpCode::MOVE_BX_TO_AX => result.push_str("mov ax, bx"),
+                OpCode::MOVE_BX_TO_CX => result.push_str("mov cx, bx"),
+                OpCode::MOVE_BX_TO_DX => result.push_str("mov dx, bx"),
+                OpCode::MOVE_CX_TO_AX => result.push_str("mov ax, cx"),
+                OpCode::MOVE_CX_TO_BX => result.push_str("mov bx, cx"),
+                OpCode::MOVE_CX_TO_DX => result.push_str("mov dx, cx"),
+                OpCode::MOVE_DX_TO_AX => result.push_str("mov ax, dx"),
+                OpCode::MOVE_DX_TO_BX => result.push_str("mov bx, dx"),
+                OpCode::MOVE_DX_TO_CX => result.push_str("mov cx, dx"),
+                OpCode::MOVE_OP_TO_AX => {
+                    result.push_str("mov ax, ");
+                    idx += 1;
+                    result.push_str(
+                        format!("0x{:x}", self.image[idx]).as_str()
+                    )
+                },
+                OpCode::MOVE_OP_TO_BX => {
+                    result.push_str("mov bx, ");
+                    idx += 1;
+                    result.push_str(
+                        format!("0x{:x}", self.image[idx]).as_str()
+                    )
+                },
+                OpCode::MOVE_OP_TO_CX => {
+                    result.push_str("mov cx, ");
+                    idx += 1;
+                    result.push_str(
+                        format!("0x{:x}", self.image[idx]).as_str()
+                    )
+                },
+                OpCode::MOVE_OP_TO_DX => {
+                    result.push_str("mov dx, ");
+                    idx += 1;
+                    result.push_str(
+                        format!("0x{:x}", self.image[idx]).as_str()
+                    )
+                },
+                OpCode::MUL => result.push_str("mul"),
+                OpCode::NEG => result.push_str("neg"),
+                OpCode::NOT => result.push_str("not"),
+                OpCode::OR => result.push_str("or"),
+                OpCode::POP => result.push_str("pop"),
+                OpCode::PUSH => result.push_str("push"),
+                OpCode::RET => result.push_str("ret"),
+                OpCode::SHL => result.push_str("shl"),
+                OpCode::SHR => result.push_str("shr"),
+                OpCode::SUB => result.push_str("sub"),
+                OpCode::SYSCALL => result.push_str("syscall"),
+                OpCode::XOR => result.push_str("xor"),
+                _ => panic!("Unknown opcode")
+            }
+            result.push('\n');
+            idx += 1;
+        }
+
+        result
+    }
+
+}
+
+#[macro_export]
+macro_rules! image {
+    ( $( $opcode:expr ),* ) => {
+        {
+            let mut i = Image::new();
+
+            $(
+                i.emit_opcode($opcode as usize);
+            )*
+
+            i
+        }
+    };
 }

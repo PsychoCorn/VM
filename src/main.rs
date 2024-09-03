@@ -1,18 +1,26 @@
-use virtual_machine::image::Image;
+use virtual_machine::{image::Image, VirtualMachine};
+use crate::virtual_machine::op_codes::OpCode;
 
 mod virtual_machine;
 
 fn main() {
-    let mut i = Image::new();
-    i.emit_opcode(1);
-    i.emit_opcode(2);
-    i.set_entry_point_here();
-    i.emit_opcode(4);
-    i.save_to_file("image.kondra").unwrap();
+    let i: Image = image!{
+        OpCode::MOVE_OP_TO_AX, 0,
+        OpCode::MOVE_OP_TO_DX, 0,
+        OpCode::MOVE_OP_TO_CX, 6,
+        OpCode::SYSCALL,
+        OpCode::MOVE_OP_TO_AX, 2,
+        OpCode::MOVE_OP_TO_DX, 0,
+        OpCode::SYSCALL
+    };
 
     let mut i1 = Image::new();
-    i1.load_from_file("image.kondra").unwrap();
-    i1.emit_opcode(123);
-    println!("{i1:?}");
+    i1.emit_str("Hello\n");
+    i1.set_entry_point_here();
+    i1.emit_from_other(&i);
+    println!("{}", i1.get_mnemonics());
+    let mut m = VirtualMachine::new();
+    m.load_image(&i1).unwrap();
+    println!("Exit code: {}", m.execute().unwrap());
 }
 
