@@ -11,8 +11,8 @@ use into_char::IntoChar;
 use lexical_cast::LexicalCast;
 use op_codes::*;
 
-pub type Word  = usize;
-pub type SWord = isize;
+pub type Word  = u64;
+pub type SWord = i64;
 pub type Real  = f64;
 
 const DEFAULT_MEM_SIZE: Word = 0x10000;
@@ -43,7 +43,8 @@ pub struct VirtualMachine {
 impl VirtualMachine {
 
     pub fn with_memory(memory_size: Word) -> Self {
-        let max_address = memory_size / size_of::<Word>();
+        let max_address = 
+            memory_size / size_of::<Word>() as Word;
         Self {
             max_address,
             ip    : 0,
@@ -54,7 +55,7 @@ impl VirtualMachine {
             bx    : 0,
             cx    : 0,
             dx    : 0,
-            memory: vec![0; max_address],
+            memory: vec![0; max_address as usize],
         }
     }
 
@@ -66,29 +67,29 @@ impl VirtualMachine {
         &self.memory
     }
 
-    pub fn max_address(&self) -> Word {
+    pub fn address(&self) -> Word {
         self.max_address
     }
 
-    pub fn get_ip(&self) -> Word {
+    pub fn ip(&self) -> Word {
         self.ip
     }
 
-    pub fn get_sp(&self) -> Word {
+    pub fn sp(&self) -> Word {
         self.sp
     }
 
-    pub fn get_fp(&self) -> Word {
+    pub fn fp(&self) -> Word {
         self.fp
     }
 
-    pub fn get_lp(&self) -> Word {
+    pub fn lp(&self) -> Word {
         self.lp
     }
 
     pub fn load_image(&mut self, image: &Image) -> Result<(), &str>
     {
-        if image.get_image().len() > self.max_address {
+        if image.get_image().len() > self.max_address as usize {
             return Err("image's size too large");
         }
 
@@ -110,15 +111,15 @@ impl VirtualMachine {
 
         while self.ip < self.max_address {
 
-            match self.memory[self.ip] {
+            match self.memory[self.ip as usize] {
 
                 OpCode::PUSH => {
                     self.sp -= 1;
-                    self.memory[self.sp] = self.cx;
+                    self.memory[self.sp as usize] = self.cx;
                 }
 
                 OpCode::POP => {
-                    self.cx = self.memory[self.sp];
+                    self.cx = self.memory[self.sp as usize];
                     self.sp += 1;
                 }
 
@@ -333,13 +334,13 @@ impl VirtualMachine {
 
                 OpCode::CALL => {
                     self.sp -= 1;
-                    self.memory[self.sp] = self.ip + 1;
+                    self.memory[self.sp as usize] = self.ip + 1;
                     self.ip = self.dx;
                     continue;
                 }
 
                 OpCode::RET => {
-                    self.ip = self.memory[self.sp];
+                    self.ip = self.memory[self.sp as usize];
                     self.sp += 1;
                     continue;
                 }
@@ -350,22 +351,22 @@ impl VirtualMachine {
 
                 OpCode::MOVE_OP_TO_AX => {
                     self.ip += 1;
-                    self.ax = self.memory[self.ip];
+                    self.ax = self.memory[self.ip as usize];
                 }
 
                 OpCode::MOVE_OP_TO_BX => {
                     self.ip += 1;
-                    self.bx = self.memory[self.ip];
+                    self.bx = self.memory[self.ip as usize];
                 }
 
                 OpCode::MOVE_OP_TO_CX => {
                     self.ip += 1;
-                    self.cx = self.memory[self.ip];
+                    self.cx = self.memory[self.ip as usize];
                 }
 
                 OpCode::MOVE_OP_TO_DX => {
                     self.ip += 1;
-                    self.dx = self.memory[self.ip];
+                    self.dx = self.memory[self.ip as usize];
                 }
 
                 OpCode::MOVE_BX_TO_AX => {
@@ -439,7 +440,7 @@ impl VirtualMachine {
                 }
 
                 OpCode::DEREF => {
-                    self.ax = self.memory[self.ax];
+                    self.ax = self.memory[self.ax as usize];
                 }
 
                 opcode => panic!("Unknown opcode: {opcode}")
@@ -457,29 +458,35 @@ impl VirtualMachine {
             // every char in unicode and stores in Word
             // dx - address of first char
             // cx - length of string
+            // ax - num of printed bytes
             0 => {
+                self.ax = 0;
                 while self.cx > 0 {
                     print!(
                         "{}", 
                         self
-                            .memory[self.dx]
+                            .memory[self.dx as usize]
                             .into_char()
                             .unwrap()
                     );
                     self.dx += 1;
                     self.cx -= 1;
+                    self.ax += 1;
                 }
                 io::stdout().flush().unwrap();
             }
 
             // get line from console
             // dx - address of buffer
+            // ax - num of gotten bytes
             1 => {
+                self.ax = 0;
                 let mut buf = String::new();
                 io::stdin().read_line(&mut buf).unwrap();
                 for c in buf.chars() {
-                    self.memory[self.dx] = c as Word;
+                    self.memory[self.dx as usize] = c as Word;
                     self.dx += 1;
+                    self.ax += 1;
                 }
             }
 

@@ -1,9 +1,7 @@
 use std::ptr::slice_from_raw_parts;
 use super::Word;
 
-pub trait GetBytes
-    where
-        Self : Copy 
+pub trait GetBytes : Copy 
 {
     fn get_bytes(&self) -> &[u8] {
         let data = 

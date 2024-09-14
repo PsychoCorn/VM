@@ -97,4 +97,10 @@ impl OpCode {
     // ax = *ax
     pub const DEREF        : Word = 59;
 
+    // heap operations
+    // cx - number of bytes
+    // ax - address
+    pub const MALLOC        : Word = 60;
+    pub const FREE        : Word = 60;
+
 }

@@ -73,50 +73,62 @@ impl Image {
 
         let words_counter = str_in_words.len();
 
-        self.prepare_space(words_counter);
+        self.prepare_space(words_counter as Word);
 
         self
-            .image[self.emit_address..self.emit_address+words_counter]
+            .image[
+                self.emit_address as usize
+                ..
+                self.emit_address as usize + words_counter
+            ]
             .copy_from_slice(&str_in_words);
 
-        self.emit_address += words_counter;
+        self.emit_address += words_counter as Word;
 
         start_address
     }
 
     pub fn emit_from_other(&mut self, other: &Self) -> Word {
         let word_counter = other.image.len();
-        self.prepare_space(word_counter);
+        self.prepare_space(word_counter as Word);
 
         let start_address = self.emit_address;
 
         self
-            .image[self.emit_address..self.emit_address + word_counter]
+            .image[
+                self.emit_address as usize
+                ..
+                self.emit_address as usize + word_counter
+            ]
             .clone_from_slice(&other.image);
 
-        self.emit_address += word_counter;
+        self.emit_address += word_counter as Word;
         return start_address;
     }
 
     pub fn write_word(&mut self, address: Word, value: Word) {
         self.prepare_space_in_address(address, 1);
-        self.image[address] = value;
+        self.image[address as usize] = value;
     }
 
     pub fn write_data(&mut self, address: Word, data: &[Word]) {
         let words_count = data.len();
         self.prepare_space_in_address(
             address, 
-            words_count
+            words_count as Word
         );
 
         self 
-            .image[address..address+words_count]
+            .image[
+                address as usize
+                ..
+                address as usize + words_count
+            ]
             .clone_from_slice(data);
     }
 
     pub fn read_word(&self, address: Word) -> Word {
-        self.image[address]
+        self.image[address as usize]
     }
 
     pub fn set_entry_point_here(&mut self) {
@@ -128,7 +140,7 @@ impl Image {
         entry_point: Word
     ) -> Result<(), ()> 
     {
-        if entry_point >= self.image.len() {
+        if entry_point >= self.image.len() as Word {
             Err(())
         } else {
             self.entry_point = entry_point;
@@ -173,7 +185,7 @@ impl Image {
             if let Some(words) = from_bytes::<Word>(&buf) {
                 self.entry_point = words[0];
                 self.write_data(0, &words[1..]);
-                self.emit_address = words.len() - 1;
+                self.emit_address = words.len() as Word - 1;
                 Ok(())
             } else {
                 Err("Failed to read file")
@@ -184,7 +196,7 @@ impl Image {
     }
 
     fn prepare_space(&mut self, words_count: Word) {
-        let required = self.emit_address + words_count;
+        let required = (self.emit_address + words_count) as usize;
 
         if required > self.image.len() {
             self.image.resize(required, 0);
@@ -195,7 +207,7 @@ impl Image {
         &mut self, address: Word, 
         words_count: Word
     ) {
-        let required = address + words_count;
+        let required = (address + words_count) as usize;
 
         if required > self.image.len() {
             self.image.resize(required, 0);
@@ -203,7 +215,7 @@ impl Image {
     }
 
     fn emit(&mut self, code: Word) {
-        self.image[self.emit_address] = code;
+        self.image[self.emit_address as usize] = code;
         self.emit_address += 1;
     }
 
@@ -215,7 +227,7 @@ impl Image {
     #[allow(dead_code, unused_variables)]
     pub fn get_mnemonics_from(&self, address: Word) -> String {
         let mut result = String::new();
-        let mut idx = address;
+        let mut idx = address as usize;
 
         while idx < self.image.len() {
             result.push_str(format!("0x{idx:0>16x}: ").as_str());
@@ -317,12 +329,12 @@ impl Image {
 
 #[macro_export]
 macro_rules! image {
-    ( $( $opcode:expr ),* ) => {
+    ( $( $opcode:expr ) * ) => {
         {
             let mut i = Image::new();
 
             $(
-                i.emit_opcode($opcode as usize);
+                i.emit_opcode($opcode as u64);
             )*
 
             i

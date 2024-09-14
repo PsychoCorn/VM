@@ -1,9 +1,7 @@
 use super::{Word, SWord, Real};
 
 /// cast from Self to T without changing bit representation
-pub trait LexicalCast 
-    where 
-        Self: Copy 
+pub trait LexicalCast : Copy 
 {   
     fn lexical_cast<T: Copy>(&self) -> Option<T> {
         if size_of::<Self>() != size_of::<T>() ||

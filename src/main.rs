@@ -1,47 +1,86 @@
-use virtual_machine::{image::Image, VirtualMachine};
-type op = virtual_machine::op_codes::OpCode;
+use virtual_machine::{image::Image, VirtualMachine, op_codes::OpCode as OC};
+use std::env;
+
 
 mod virtual_machine;
 
-fn main() {
-    let mut i: Image = image!{
-        // sum of squares
-        op::POP,
-        op::MOVE_CX_TO_DX, // return address
-        op::POP, // first op
-        op::MOVE_CX_TO_AX,
-        op::POP, // second op
-        op::MOVE_CX_TO_BX,
-        op::MOVE_DX_TO_CX,
-        op::PUSH,
-        op::MOVE_BX_TO_CX,
-        op::MOVE_AX_TO_BX,
-        op::MUL,
-        op::MOVE_AX_TO_DX,
-        op::MOVE_CX_TO_AX,
-        op::MOVE_CX_TO_BX,
-        op::MUL,
-        op::MOVE_DX_TO_BX,
-        op::ADD,
-        op::RET,
-        0,
-        0,
-        op::MOVE_OP_TO_CX, 4,
-        op::PUSH,
-        op::MOVE_OP_TO_CX, 8,
-        op::PUSH,
-        op::MOVE_OP_TO_DX, 0,
-        op::CALL,
-        op::MOVE_AX_TO_DX,
-        op::MOVE_OP_TO_AX, 2,
-        op::SYSCALL
-    };
+// all before entry point is data segment
+// all procedures below main
+// main from entry point to first zero instraction word
 
-    println!("{}", i.get_mnemonics());
-    i.set_entry_point(0x14).unwrap();
-    i.save_to_file("image.kondra").unwrap();
-    let mut vm = VirtualMachine::with_memory(8 * 40);
-    vm.load_image(&i).unwrap();
-    println!("Return value: {}", vm.execute().unwrap());
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        println!("kondra vm was lunched");
+        return;
+    }
+
+    match args[1].as_str() {
+        "run" => {
+            assert_eq!(args.len(), 3);
+            let mut vm = VirtualMachine::new();
+            let mut i = Image::new();
+            if let Err(msg) = 
+                i.load_from_file(args[2].as_str()) 
+            {
+                panic!("{msg}");
+            } else if let Err(msg) = vm.load_image(&i) {
+                panic!("{msg}");
+            } else {
+                match vm.execute() {
+                    Ok(val) => {
+                        println!("Program ended with code: {val}");
+                    },
+                    Err(_) => {
+                        println!("Execution failed");
+                    }
+                }
+            }
+        },
+
+        "disasm" => {
+            assert_eq!(args.len(), 3);
+            let mut i = Image::new();
+            if let Err(msg) = 
+                i.load_from_file(args[2].as_str()) 
+            {
+                panic!("{msg}");
+            } else {
+                println!("{}", i.get_mnemonics());
+            }
+        }
+
+        "test" => {
+            let i = create_hello();
+            println!("{i:?}");
+            i.save_to_file("image.kondra").unwrap();
+        }
+
+        _ => println!("unknown command"),
+    }
 }
 
+fn create_hello() -> Image {
+    let mut i = image! {
+        'H''e''l''l''o'' ''W''o''r''l''d''!''\n' 
+        0 
+        0 
+        0 
+        0 
+    };
+
+    i.set_entry_point_here();
+
+    i.emit_from_other(
+        &image! {
+            OC::MOVE_OP_TO_DX 0
+            OC::MOVE_OP_TO_CX 13
+            OC::MOVE_OP_TO_AX 0
+            OC::SYSCALL
+            OC::MOVE_AX_TO_DX
+            OC::MOVE_OP_TO_AX 2
+            OC::SYSCALL
+        }
+    );
+    i
+}
