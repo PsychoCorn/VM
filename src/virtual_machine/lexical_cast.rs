@@ -32,5 +32,5 @@ macro_rules! impl_lexical_cast {
     };
 }
 
-impl_lexical_cast!(Word, SWord, Real);
+impl_lexical_cast!(Word, SWord, Real, *mut u8);
 

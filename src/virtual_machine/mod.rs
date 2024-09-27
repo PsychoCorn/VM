@@ -440,6 +440,9 @@ impl VirtualMachine {
                 }
 
                 OpCode::DEREF => {
+                    if self.ax == 0 {
+                        panic!("Zero pointer dereference")
+                    }
                     self.ax = self.memory[self.ax as usize];
                 }
 
